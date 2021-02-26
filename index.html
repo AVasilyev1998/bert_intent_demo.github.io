@@ -2,16 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
+  <link rel='stylesheet' href='css/main.css'>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
   <script src="https://unpkg.com/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script>
   <script src='js/tokenizer.js'></script>
+  <link rel='stylesheet' href='css/main.css'>
 </head>
 <body>
+    
     <div class='container text-center'>
         <h1>
             BERT Tiny Intent Classifier
         </h1>
+
+        <div id='loading'><h3>Loading model</h3> <div class="loader_model_class"></div>    </div>
+
 
         <div class="input-group input-group-sm mb-3">
             <span class="input-group-text" id="inputGroup-sizing-sm">Введите команду</span>
@@ -22,6 +28,9 @@
         <button class='btn btn-primary' id='loadModel'>Предсказать тип команды</button>
         <h2 id='result'>Class: </h2>
 
+        <div class=''>
+            <p id='classes'></p>
+        </div>
         
     </div>
 </body>
@@ -34,17 +43,26 @@
     const classesArray = ['PlayMusic', 'AddToPlaylist', 'RateBook', 'SearchScreeningEvent', 'BookRestaurant', 'GetWeather', 'SearchCreativeWork']
     const classPredictionLAbel = document.getElementById('result');
 
+    const classesDescr = document.getElementById('classes');
+    classesDescr.textContent = '*Existing classes:' + classesArray;
+    document.getElementById("loading").style.display = 'none';
+
+
     let tokenizer = new Tokenizer();
     
     loadModelBtn.onclick = function(){
+        document.getElementById("loading").style.display = 'visible';
+
         if(textInput.value === ''){
             console.log('Команда не введена');
         }else{
 
             getVocab();
-            const modelUrl = 'https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/AVasilyev1998/bert_intent_demo.github.io/main/model/model.json' // 'http://localhost:8080/model.json'
+            const modelUrl = 'https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/AVasilyev1998/bert_intent_demo.github.io/main/model/model.json' 
+            // const modelUrl = 'http://localhost:8080/model.json';
             const model = tf.loadGraphModel(modelUrl).then(model => {
             // console.log('Model loaded successfully');
+            document.getElementById("loading").style.display = 'none';
             const zeros = tf.tensor2d([tokens], [1, 38] , 'int32');
             let result = model.predict(zeros);
             console.log('weights: '+result.arraySync()[0]);
@@ -72,7 +90,8 @@
 
 
     function getVocab(){
-        fetch('https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/AVasilyev1998/bert_intent_demo.github.io/main/model/vocab.json') //fetch('http:localhost:8080/vocab.json')
+        fetch('https://cors-anywhere.herokuapp.com/https://raw.githubusercontent.com/AVasilyev1998/bert_intent_demo.github.io/main/model/vocab.json')
+        // fetch('http:localhost:8080/vocab.json')
             .then(res => res.json()) // Gets the response and returns it as a blob
             .then(json => {
                 let obj = json;
