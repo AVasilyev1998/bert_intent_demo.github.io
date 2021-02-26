@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+  <script src="https://unpkg.com/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script>
+  <script src='js/tokenizer.js'></script>
+</head>
+<body>
+    <div class='container text-center'>
+        <h1>
+            BERT Tiny Intent Classifier
+        </h1>
+
+        <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Введите команду</span>
+            <input id='textToClassificate' type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+          </div>
+
+        <!-- <input class='form-control' type="text" id='textToClassificate'> -->
+        <button class='btn btn-primary' id='loadModel'>Предсказать тип команды</button>
+        <h2 id='result'>Class: </h2>
+    </div>
+</body>
+<script>
+    const uploadJSONInput = document.getElementById('upload-json');
+    const uploadWeightsInput = document.getElementById('upload-weights');
+    const loadModelBtn = document.getElementById('loadModel');
+    const predictWithModel = document.getElementById('predictModel');
+    const textInput = document.getElementById('textToClassificate');
+    const classesArray = ['PlayMusic', 'AddToPlaylist', 'RateBook', 'SearchScreeningEvent', 'BookRestaurant', 'GetWeather', 'SearchCreativeWork']
+    const classPredictionLAbel = document.getElementById('result');
+
+    let tokenizer = new Tokenizer();
+    
+    loadModelBtn.onclick = function(){
+        if(textInput.value === ''){
+            console.log('Команда не введена');
+        }else{
+
+            getVocab();
+            const modelUrl = 'http://localhost:8080/model.json'
+            const model = tf.loadGraphModel(modelUrl).then(model => {
+            // console.log('Model loaded successfully');
+            const zeros = tf.tensor2d([tokens], [1, 38] , 'int32');
+            let result = model.predict(zeros);
+            console.log('weights: '+result.arraySync()[0]);
+            // console.log('class: '+classesArray[getIdOfMaxElem(result.arraySync()[0])]);
+            classPredictionLAbel.innerHTML = 'Class: '+classesArray[getIdOfMaxElem(result.arraySync()[0])];
+            })
+
+        }
+    };
+
+    
+    function getIdOfMaxElem(arr){
+        let index = 0
+        let max = -1;
+        for(let i=0;i < arr.length; i++){
+            if(arr[i] > max){
+                max = arr[i]
+                index = i;
+            }
+        }
+        return index
+    }
+
+    
+
+
+    function getVocab(){
+        fetch('http:localhost:8080/vocab.json')
+            .then(res => res.json()) // Gets the response and returns it as a blob
+            .then(json => {
+                let obj = json;
+                // console.log('vocab loaded');
+                let tokenizer = new Tokenizer(obj, 38, true);
+                // console.log(tokenizer);
+                let text = textInput.value;
+                let textArray = text.split(' ');
+                // console.log(textArray);
+                tokens = tokenizer.convert_tokens_to_ids(textArray);
+                // console.log('play token'+tokenizer.convert_tokens_to_ids(['play']));
+                // console.log('tokens:'+tokens);
+                tokens = tokenizer.addMasks(tokens);
+                // console.log('tokens:'+tokens);
+                tokens = tokenizer.pad(tokens);
+                // console.log('tokens:'+tokens);
+            }
+            );
+        }
+
+    
+</script>
