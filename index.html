@@ -40,7 +40,7 @@
         }else{
 
             getVocab();
-            const modelUrl = 'http://localhost:8080/model.json'
+            const modelUrl = 'https://github.com/AVasilyev1998/bert_intent_demo.github.io/blob/main/model/model.json' // 'http://localhost:8080/model.json'
             const model = tf.loadGraphModel(modelUrl).then(model => {
             // console.log('Model loaded successfully');
             const zeros = tf.tensor2d([tokens], [1, 38] , 'int32');
@@ -70,7 +70,7 @@
 
 
     function getVocab(){
-        fetch('http:localhost:8080/vocab.json')
+        fetch('https://github.com/AVasilyev1998/bert_intent_demo.github.io/blob/main/model/vocab.json') //fetch('http:localhost:8080/vocab.json')
             .then(res => res.json()) // Gets the response and returns it as a blob
             .then(json => {
                 let obj = json;
